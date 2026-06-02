@@ -27,6 +27,7 @@ environment:
 # dependencies can be manually updated by changing the version numbers below to
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
+
 dependencies:
   flutter:
     sdk: flutter
@@ -40,6 +41,10 @@ dependencies:
   # Internacionalização e formatação de datas (pt_BR).
   intl: ^0.20.2
 
+  # Dependências do Banco de Dados (Sua parte)
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
