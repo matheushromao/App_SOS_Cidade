@@ -40,6 +40,19 @@ dependencies:
   # Internacionalização e formatação de datas (pt_BR).
   intl: ^0.20.2
 
+  # --- Gerenciamento de estado e injeção de dependência ---
+  flutter_riverpod: ^2.6.1
+
+  # --- Persistência (SQLite) ---
+  # sqflite           -> Android / iOS
+  # sqflite_common_ffi -> Desktop (Windows/Linux/macOS) e testes na VM Dart
+  # sqflite_common_ffi_web -> Web (requer setup, ver README)
+  sqflite: ^2.4.1
+  sqflite_common: ^2.5.4
+  sqflite_common_ffi: ^2.3.4
+  sqflite_common_ffi_web: ^0.4.5
+  path: ^1.9.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -24,11 +24,18 @@ class AppColors {
   /// Cinza — usado para informações neutras e ícones secundários.
   static const Color neutral = Color(0xFF607D8B);
 
-  /// Fundo geral da aplicação.
+  /// Fundo geral da aplicação (tema claro).
   static const Color background = Color(0xFFF4F6F9);
   static const Color surface = Colors.white;
 
-  /// Tons de texto.
+  /// Tons de texto (tema claro).
   static const Color textPrimary = Color(0xFF1A1C1E);
   static const Color textSecondary = Color(0xFF5C6670);
+
+  // --- Tema escuro ---------------------------------------------------------
+  static const Color primaryDarkMode = Color(0xFF82B1FF);
+  static const Color backgroundDark = Color(0xFF121417);
+  static const Color surfaceDark = Color(0xFF1C1F24);
+  static const Color textPrimaryDark = Color(0xFFE6E8EA);
+  static const Color textSecondaryDark = Color(0xFF9AA3AD);
 }
