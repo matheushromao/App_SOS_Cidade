@@ -8,15 +8,12 @@ import '../../core/utils/responsive.dart';
 import '../../models/chamado.dart';
 import '../../providers/chamado_provider.dart';
 import '../../widgets/cards/stats_grid.dart';
+import '../../widgets/common/alerta_criticos.dart';
 import '../../widgets/common/dashboard_header.dart';
 import '../../widgets/common/search_field.dart';
 import '../../widgets/lists/chamados_list.dart';
 import '../chamados/chamados_filter_bar.dart';
 
-/// Tela inicial e principal do SOS Cidade.
-///
-/// É uma View "burra": apenas observa o [chamadoControllerProvider] e delega
-/// as ações ao controller. Não contém regra de negócio nem acesso a dados.
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
 
@@ -53,6 +50,9 @@ class DashboardPage extends ConsumerWidget {
                                 totalChamados: state.estatisticas.total,
                               ),
                               const SizedBox(height: 24),
+                              AlertaCriticos(
+                                quantidadeCriticos: state.estatisticas.criticos,
+                              ),
                               const _SecaoTitulo(
                                 titulo: 'Visão Geral',
                                 icon: Icons.dashboard_outlined,
@@ -120,7 +120,6 @@ class DashboardPage extends ConsumerWidget {
   }
 }
 
-/// Título de seção com ícone e ação opcional à direita.
 class _SecaoTitulo extends StatelessWidget {
   final String titulo;
   final IconData icon;
@@ -140,13 +139,12 @@ class _SecaoTitulo extends StatelessWidget {
         const SizedBox(width: 8),
         Text(titulo, style: Theme.of(context).textTheme.titleLarge),
         const Spacer(),
-        ?trailing,
+        if (trailing != null) trailing!,
       ],
     );
   }
 }
 
-/// Exibe quantos chamados estão sendo mostrados.
 class _ContadorResultados extends StatelessWidget {
   final int quantidade;
   final int total;

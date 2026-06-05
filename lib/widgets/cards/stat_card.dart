@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_constants.dart';
 
-/// Card de estatística exibido no topo do Dashboard.
-///
-/// Mostra um ícone, uma quantidade em destaque e um título.
 class StatCard extends StatelessWidget {
   final String title;
   final int value;
@@ -21,12 +18,16 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(AppConstants.spacing),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface, // ← corrigido: respeita dark/light
         borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
         boxShadow: [
           BoxShadow(
             color: color.withValues(alpha: 0.10),
@@ -63,10 +64,10 @@ class StatCard extends StatelessWidget {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF5C6670),
+              color: colorScheme.onSurfaceVariant, // ← corrigido
             ),
           ),
         ],
