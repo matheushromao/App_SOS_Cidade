@@ -1,0 +1,65 @@
+modelo de chamado 
+class Chamado {
+  final int id;
+  final String titulo;
+  final String descricao;
+  final String status; // 'aberto', 'em andamento', 'concluído'
+
+  Chamado({required this.id, required this.titulo, required this.descricao, required this.status});
+  
+  [span_2](start_span)// Regra: Chamados concluídos não podem ser editados[span_2](end_span)
+  bool get isConcluido => status == 'concluído';
+}
+
+
+
+
+
+
+Notifier
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+class ChamadosNotifier extends Notifier<List<Chamado>> {
+  @override
+  List<Chamado> build() => []; 
+
+  void editarChamado(Chamado chamadoEditado) {
+    final index = state.indexWhere((c) => c.id == chamadoEditado.id);
+    if (index == -1) return;
+
+    [span_4](start_span)// Regra de Negócio: Chamados concluídos não podem ser editados[span_4](end_span)
+    if (state[index].isConcluido) {
+      throw Exception("Chamados concluídos não podem ser editados.");
+    }
+
+    
+    state = [
+      for (int i = 0; i < state.length; i++)
+        if (i == index) chamadoEditado else state[i]
+    ];
+    
+    
+    [span_5](start_span)// DatabaseHelper.instance.update(chamadoEditado);[span_5](end_span)
+  }
+}
+
+final chamadosProvider = NotifierProvider<ChamadosNotifier, List<Chamado>>(() {
+  return ChamadosNotifier();
+});
+
+
+
+
+
+Lógica na tela
+
+
+final chamado = // ... chamado vindo da navegação;
+
+ElevatedButton(
+  onPressed: chamado.isConcluido 
+    ? null // Desabilita o botão se estiver concluído
+    : () => Navigator.pushNamed(context, '/editar', arguments: chamado),
+  child: Text("Editar Chamado"),
+)
