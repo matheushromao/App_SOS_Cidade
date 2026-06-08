@@ -1,98 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/responsive.dart';
 import '../../models/chamado.dart';
-import '../../services/chamado_service.dart';
+import '../../providers/chamado_provider.dart';
 import '../../widgets/cards/stats_grid.dart';
+import '../../widgets/common/alerta_criticos.dart';
 import '../../widgets/common/dashboard_header.dart';
 import '../../widgets/common/search_field.dart';
 import '../../widgets/lists/chamados_list.dart';
 import '../chamados/chamados_filter_bar.dart';
-import '../detalhes/detalhes_page.dart';
 
-/// Tela inicial e principal do SOS Cidade.
-///
-/// Reúne cabeçalho institucional, cards de estatísticas, busca,
-/// filtros e a lista de chamados, tudo de forma responsiva.
-class DashboardPage extends StatefulWidget {
+class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
 
   @override
-  State<DashboardPage> createState() => _DashboardPageState();
-}
-
-class _DashboardPageState extends State<DashboardPage> {
-  final ChamadoService _service = ChamadoService();
-
-  List<Chamado> _todos = [];
-  bool _carregando = true;
-
-  // Estado dos filtros e busca.
-  String _busca = '';
-  Categoria? _categoria;
-  StatusChamado? _status;
-  Prioridade? _prioridade;
-
-  @override
-  void initState() {
-    super.initState();
-    _carregar();
-  }
-
-  Future<void> _carregar() async {
-    setState(() => _carregando = true);
-    final chamados = await _service.listarChamados();
-    if (!mounted) return;
-    setState(() {
-      _todos = chamados;
-      _carregando = false;
-    });
-  }
-
-  /// Lista resultante após aplicar busca e filtros.
-  List<Chamado> get _filtrados => _service.filtrar(
-        _todos,
-        busca: _busca,
-        categoria: _categoria,
-        status: _status,
-        prioridade: _prioridade,
-      );
-
-  bool get _temFiltroAtivo =>
-      _busca.isNotEmpty ||
-      _categoria != null ||
-      _status != null ||
-      _prioridade != null;
-
-  void _limparFiltros() {
-    setState(() {
-      _busca = '';
-      _categoria = null;
-      _status = null;
-      _prioridade = null;
-    });
-  }
-
-  void _abrirDetalhes(Chamado chamado) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => DetalhesPage(chamado: chamado)),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(chamadoControllerProvider);
+    final controller = ref.read(chamadoControllerProvider.notifier);
     final double horizontal = Responsive.horizontalPadding(context);
-    final estatisticas = _service.calcularEstatisticas(_todos);
-    final filtrados = _filtrados;
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.pushNamed(context, AppRoutes.cadastro),
+        icon: const Icon(Icons.add),
+        label: const Text('Novo chamado'),
+      ),
       body: SafeArea(
-        child: _carregando
+        child: state.carregando
             ? const Center(child: CircularProgressIndicator())
             : RefreshIndicator(
-                onRefresh: _carregar,
+                onRefresh: controller.carregar,
                 child: Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(
@@ -103,64 +44,65 @@ class _DashboardPageState extends State<DashboardPage> {
                         SliverPadding(
                           padding: EdgeInsets.fromLTRB(
                               horizontal, 16, horizontal, 0),
-                          sliver: SliverList(
-                            delegate: SliverChildListDelegate([
+                          sliver: SliverList.list(
+                            children: [
                               DashboardHeader(
-                                totalChamados: estatisticas.total,
+                                totalChamados: state.estatisticas.total,
                               ),
                               const SizedBox(height: 24),
-                              _SecaoTitulo(
+                              AlertaCriticos(
+                                quantidadeCriticos: state.estatisticas.criticos,
+                              ),
+                              const _SecaoTitulo(
                                 titulo: 'Visão Geral',
                                 icon: Icons.dashboard_outlined,
                               ),
                               const SizedBox(height: 12),
-                              StatsGrid(estatisticas: estatisticas),
+                              StatsGrid(estatisticas: state.estatisticas),
                               const SizedBox(height: 24),
                               _SecaoTitulo(
                                 titulo: 'Chamados',
                                 icon: Icons.list_alt_rounded,
-                                trailing: _temFiltroAtivo
-                                    ? TextButton.icon(
-                                        onPressed: _limparFiltros,
+                                trailing: state.filtro.vazio
+                                    ? null
+                                    : TextButton.icon(
+                                        onPressed: controller.limparFiltros,
                                         icon: const Icon(Icons.clear_all,
                                             size: 18),
                                         label: const Text('Limpar'),
-                                      )
-                                    : null,
+                                      ),
                               ),
                               const SizedBox(height: 12),
                               SearchField(
-                                value: _busca,
-                                onChanged: (v) => setState(() => _busca = v),
-                                onClear: () => setState(() => _busca = ''),
+                                value: state.filtro.busca,
+                                onChanged: controller.buscar,
+                                onClear: () => controller.buscar(''),
                               ),
                               const SizedBox(height: 12),
                               ChamadosFilterBar(
-                                categoria: _categoria,
-                                status: _status,
-                                prioridade: _prioridade,
-                                onCategoria: (v) =>
-                                    setState(() => _categoria = v),
-                                onStatus: (v) => setState(() => _status = v),
-                                onPrioridade: (v) =>
-                                    setState(() => _prioridade = v),
+                                categoria: state.filtro.categoria,
+                                status: state.filtro.status,
+                                prioridade: state.filtro.prioridade,
+                                onCategoria: controller.filtrarPorCategoria,
+                                onStatus: controller.filtrarPorStatus,
+                                onPrioridade: controller.filtrarPorPrioridade,
                               ),
                               const SizedBox(height: 12),
                               _ContadorResultados(
-                                quantidade: filtrados.length,
-                                total: _todos.length,
+                                quantidade: state.filtrados.length,
+                                total: state.todos.length,
                               ),
                               const SizedBox(height: 12),
-                            ]),
+                            ],
                           ),
                         ),
                         SliverPadding(
                           padding: EdgeInsets.fromLTRB(
-                              horizontal, 0, horizontal, 32),
+                              horizontal, 0, horizontal, 96),
                           sliver: SliverToBoxAdapter(
                             child: ChamadosList(
-                              chamados: filtrados,
-                              onTapChamado: _abrirDetalhes,
+                              chamados: state.filtrados,
+                              onTapChamado: (c) => _abrirDetalhes(context, c),
                             ),
                           ),
                         ),
@@ -172,9 +114,12 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
   }
+
+  void _abrirDetalhes(BuildContext context, Chamado chamado) {
+    Navigator.pushNamed(context, AppRoutes.detalhes, arguments: chamado);
+  }
 }
 
-/// Título de seção com ícone e ação opcional à direita.
 class _SecaoTitulo extends StatelessWidget {
   final String titulo;
   final IconData icon;
@@ -192,22 +137,14 @@ class _SecaoTitulo extends StatelessWidget {
       children: [
         Icon(icon, size: 20, color: AppColors.primary),
         const SizedBox(width: 8),
-        Text(
-          titulo,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-          ),
-        ),
+        Text(titulo, style: Theme.of(context).textTheme.titleLarge),
         const Spacer(),
-        ?trailing,
+        if (trailing != null) trailing!,
       ],
     );
   }
 }
 
-/// Exibe quantos chamados estão sendo mostrados.
 class _ContadorResultados extends StatelessWidget {
   final int quantidade;
   final int total;

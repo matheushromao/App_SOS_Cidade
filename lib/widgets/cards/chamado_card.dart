@@ -4,6 +4,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../models/chamado.dart';
+import '../../views/shared/chamado_presentation.dart';
 import '../common/info_badge.dart';
 
 /// Card que representa um chamado na lista do Dashboard.
