@@ -23,15 +23,14 @@ final databaseServiceProvider = Provider<DatabaseService>(
 
 /// Repositório de chamados.
 ///
-/// PADRÃO ATUAL: in-memory, para o app rodar em todas as plataformas desde já
-/// (inclusive Web sem setup) enquanto a Pessoa 3 finaliza a persistência.
+/// PADRÃO: persistência real em SQLite via [SqliteChamadoRepository], para que
+/// os dados sobrevivam ao fechamento do app. O banco é semeado uma única vez no
+/// bootstrap (`main()` -> `popularSeVazio()`).
 ///
-/// Para ativar o SQLite, troque o corpo por:
-///   final repo = SqliteChamadoRepository(ref.watch(databaseServiceProvider));
-///   ref.onDispose(() {}); // popule via repo.popularSeVazio() no bootstrap
-///   return repo;
+/// Nos testes este provider é sobrescrito por [InMemoryChamadoRepository]
+/// (ver `overrides` em test/widget_test.dart), mantendo-os livres de I/O.
 final chamadoRepositoryProvider = Provider<ChamadoRepository>(
-  (ref) => InMemoryChamadoRepository(),
+  (ref) => SqliteChamadoRepository(ref.watch(databaseServiceProvider)),
 );
 
 // --- Domínio ---------------------------------------------------------------

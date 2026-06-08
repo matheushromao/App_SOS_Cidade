@@ -13,7 +13,14 @@ import '../../core/utils/date_formatter.dart';
 class DashboardHeader extends StatefulWidget {
   final int totalChamados;
 
-  const DashboardHeader({super.key, required this.totalChamados});
+  /// Ação opcional exibida no canto superior direito (ex.: alternar tema).
+  final Widget? acao;
+
+  const DashboardHeader({
+    super.key,
+    required this.totalChamados,
+    this.acao,
+  });
 
   @override
   State<DashboardHeader> createState() => _DashboardHeaderState();
@@ -98,6 +105,7 @@ class _DashboardHeaderState extends State<DashboardHeader> {
                   ],
                 ),
               ),
+              if (widget.acao != null) widget.acao!,
             ],
           ),
           const SizedBox(height: 20),

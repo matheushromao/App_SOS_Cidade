@@ -84,6 +84,8 @@ class ChamadoController extends StateNotifier<ChamadoState> {
     required Prioridade prioridade,
     required String bairro,
     String? responsavel,
+    StatusChamado status = StatusChamado.aberto,
+    DateTime? dataCriacao,
   }) async {
     await _service.criar(
       titulo: titulo,
@@ -92,6 +94,8 @@ class ChamadoController extends StateNotifier<ChamadoState> {
       prioridade: prioridade,
       bairro: bairro,
       responsavel: responsavel,
+      status: status,
+      dataCriacao: dataCriacao,
     );
     await carregar();
   }

@@ -48,6 +48,7 @@ class DashboardPage extends ConsumerWidget {
                             children: [
                               DashboardHeader(
                                 totalChamados: state.estatisticas.total,
+                                acao: _ThemeToggle(),
                               ),
                               const SizedBox(height: 24),
                               AlertaCriticos(
@@ -120,6 +121,24 @@ class DashboardPage extends ConsumerWidget {
   }
 }
 
+/// Botão que alterna entre tema claro e escuro (lê/escreve o themeModeProvider).
+class _ThemeToggle extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final modo = ref.watch(themeModeProvider);
+    final escuro = modo == ThemeMode.dark;
+    return IconButton(
+      tooltip: escuro ? 'Tema claro' : 'Tema escuro',
+      onPressed: () => ref.read(themeModeProvider.notifier).state =
+          escuro ? ThemeMode.light : ThemeMode.dark,
+      icon: Icon(
+        escuro ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+        color: Colors.white,
+      ),
+    );
+  }
+}
+
 class _SecaoTitulo extends StatelessWidget {
   final String titulo;
   final IconData icon;
@@ -139,7 +158,7 @@ class _SecaoTitulo extends StatelessWidget {
         const SizedBox(width: 8),
         Text(titulo, style: Theme.of(context).textTheme.titleLarge),
         const Spacer(),
-        if (trailing != null) trailing!,
+        ?trailing,
       ],
     );
   }

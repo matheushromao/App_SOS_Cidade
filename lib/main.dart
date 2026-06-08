@@ -7,6 +7,7 @@ import 'core/constants/app_constants.dart';
 import 'core/routes/app_routes.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/chamado_provider.dart';
+import 'repositories/chamado_repository.dart';
 import 'services/database_service.dart';
 
 Future<void> main() async {
@@ -15,9 +16,12 @@ Future<void> main() async {
   // Formatação de datas em pt_BR.
   await initializeDateFormatting('pt_BR', null);
 
-  // Prepara o backend SQLite correto para a plataforma atual.
-  // (O app roda com repositório em memória por padrão; ver chamado_provider.)
+  // Prepara o backend SQLite correto para a plataforma atual e abre o banco.
   DatabaseService.configurarFactory();
+
+  // Semeia a base com dados de exemplo apenas na primeira execução. Depois
+  // disso os chamados persistem entre aberturas do app (requisito de SQLite).
+  await SqliteChamadoRepository(DatabaseService.instance).popularSeVazio();
 
   // ProviderScope é a raiz da injeção de dependência do Riverpod.
   runApp(const ProviderScope(child: SosCidadeApp()));
