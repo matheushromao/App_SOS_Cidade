@@ -6,22 +6,23 @@ import '../../core/utils/date_formatter.dart';
 import '../../core/utils/responsive.dart';
 import '../../models/chamado.dart';
 import '../../widgets/common/info_badge.dart';
+import '../shared/chamado_presentation.dart';
 
 /// Tela de detalhes de um chamado específico.
-class DetalhesPage extends StatelessWidget {
+///
+/// Recebe o [Chamado] por argumento de rota (ver [AppRoutes]). A edição
+/// (Pessoa 7) pode ser adicionada como uma ação nesta mesma tela.
+class ChamadoDetalhesPage extends StatelessWidget {
   final Chamado chamado;
 
-  const DetalhesPage({super.key, required this.chamado});
+  const ChamadoDetalhesPage({super.key, required this.chamado});
 
   @override
   Widget build(BuildContext context) {
     final double horizontal = Responsive.horizontalPadding(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detalhes do Chamado'),
-        backgroundColor: AppColors.surface,
-      ),
+      appBar: AppBar(title: const Text('Detalhes do Chamado')),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720),
@@ -51,11 +52,7 @@ class DetalhesPage extends StatelessWidget {
                 titulo: 'Descrição',
                 child: Text(
                   chamado.descricao,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    height: 1.5,
-                    color: AppColors.textPrimary,
-                  ),
+                  style: const TextStyle(fontSize: 15, height: 1.5),
                 ),
               ),
               const SizedBox(height: 16),
@@ -77,6 +74,11 @@ class DetalhesPage extends StatelessWidget {
                       icon: Icons.location_on_outlined,
                       label: 'Bairro',
                       value: chamado.bairro,
+                    ),
+                    _LinhaInfo(
+                      icon: Icons.person_outline,
+                      label: 'Responsável',
+                      value: chamado.responsavel ?? 'Não atribuído',
                     ),
                     _LinhaInfo(
                       icon: Icons.calendar_today_rounded,
@@ -126,12 +128,7 @@ class _Cabecalho extends StatelessWidget {
             children: [
               Text(
                 chamado.titulo,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  height: 1.2,
-                  color: AppColors.textPrimary,
-                ),
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 4),
               Text(
@@ -161,7 +158,7 @@ class _Secao extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(AppConstants.spacing),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(AppConstants.borderRadius),
         border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
       ),
@@ -216,11 +213,7 @@ class _LinhaInfo extends StatelessWidget {
             child: Text(
               value,
               textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
             ),
           ),
         ],

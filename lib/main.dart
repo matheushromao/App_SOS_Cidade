@@ -1,29 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/constants/app_constants.dart';
+import 'core/routes/app_routes.dart';
 import 'core/theme/app_theme.dart';
-import 'pages/dashboard/dashboard_page.dart';
+import 'providers/chamado_provider.dart';
+import 'services/database_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Inicializa os dados de formatação de datas em português do Brasil.
+
+  // Formatação de datas em pt_BR.
   await initializeDateFormatting('pt_BR', null);
-  runApp(const SosCidadeApp());
+
+  // Prepara o backend SQLite correto para a plataforma atual.
+  // (O app roda com repositório em memória por padrão; ver chamado_provider.)
+  DatabaseService.configurarFactory();
+
+  // ProviderScope é a raiz da injeção de dependência do Riverpod.
+  runApp(const ProviderScope(child: SosCidadeApp()));
 }
 
 /// Widget raiz da aplicação SOS Cidade.
-class SosCidadeApp extends StatelessWidget {
+class SosCidadeApp extends ConsumerWidget {
   const SosCidadeApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
+
     return MaterialApp(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
+
+      // Tema global (Material 3) com suporte a claro/escuro.
       theme: AppTheme.light,
-      // Suporte a localização em português do Brasil.
+      darkTheme: AppTheme.dark,
+      themeMode: themeMode,
+
+      // Navegação centralizada.
+      initialRoute: AppRoutes.initial,
+      onGenerateRoute: AppRoutes.gerarRota,
+
+      // Localização pt_BR.
       locale: const Locale('pt', 'BR'),
       supportedLocales: const [Locale('pt', 'BR')],
       localizationsDelegates: const [
@@ -31,7 +52,6 @@ class SosCidadeApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const DashboardPage(),
     );
   }
 }

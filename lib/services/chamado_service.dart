@@ -16,6 +16,14 @@ class ChamadoEstatisticas {
     required this.concluidos,
     required this.criticos,
   });
+
+  static const ChamadoEstatisticas vazio = ChamadoEstatisticas(
+    total: 0,
+    abertos: 0,
+    emAndamento: 0,
+    concluidos: 0,
+    criticos: 0,
+  );
 }
 
 /// Serviço responsável por conectar a UI ao Banco de Dados SQLite.
