@@ -24,7 +24,10 @@ class DatabaseService {
   static final DatabaseService instance = DatabaseService._();
 
   static const String dbName = 'sos_cidade.db';
-  static const int dbVersion = 1;
+
+  /// v2: recria o schema para corrigir bancos antigos (ex.: criados sem a
+  /// coluna `responsavel`), que causavam lista vazia e falha ao salvar na web.
+  static const int dbVersion = 2;
 
   /// Nome da tabela de chamados (exposto para os repositórios).
   static const String tabelaChamados = 'chamados';
@@ -47,14 +50,15 @@ class DatabaseService {
       path,
       options: OpenDatabaseOptions(
         version: dbVersion,
-        onCreate: _onCreate,
+        onCreate: (db, version) => _criarSchema(db),
+        onUpgrade: (db, oldVersion, newVersion) => _recriarSchema(db),
         onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
       ),
     );
   }
 
   /// Criação do schema na primeira execução.
-  Future<void> _onCreate(Database db, int version) async {
+  Future<void> _criarSchema(Database db) async {
     await db.execute('''
       CREATE TABLE $tabelaChamados (
         id          TEXT PRIMARY KEY,
@@ -69,13 +73,21 @@ class DatabaseService {
       )
     ''');
 
-    // Índices úteis para as telas de busca/filtros (Pessoa 8).
+    // Índices úteis para as telas de busca/filtros.
     await db.execute(
       'CREATE INDEX idx_chamados_status ON $tabelaChamados (status)',
     );
     await db.execute(
       'CREATE INDEX idx_chamados_categoria ON $tabelaChamados (categoria)',
     );
+  }
+
+  /// Recria o schema do zero (usado em upgrades de versão para descartar
+  /// bancos com schema antigo/incompatível). Como os dados são apenas massa de
+  /// exemplo, é seguro recriar — o `popularSeVazio` repõe a semente.
+  Future<void> _recriarSchema(Database db) async {
+    await db.execute('DROP TABLE IF EXISTS $tabelaChamados');
+    await _criarSchema(db);
   }
 
   /// Fecha a conexão (útil em testes ou logout).

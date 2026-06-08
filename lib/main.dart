@@ -17,11 +17,18 @@ Future<void> main() async {
   await initializeDateFormatting('pt_BR', null);
 
   // Prepara o backend SQLite correto para a plataforma atual e abre o banco.
-  DatabaseService.configurarFactory();
-
-  // Semeia a base com dados de exemplo apenas na primeira execução. Depois
+  // Semeia a base com dados de exemplo apenas na primeira execução; depois
   // disso os chamados persistem entre aberturas do app (requisito de SQLite).
-  await SqliteChamadoRepository(DatabaseService.instance).popularSeVazio();
+  //
+  // É feito em try/catch para que uma eventual falha de inicialização do banco
+  // (ex.: Web sem `dart run sqflite_common_ffi_web:setup`) NÃO impeça o app de
+  // abrir — a tela trata o estado de erro e oferece "Tentar novamente".
+  try {
+    DatabaseService.configurarFactory();
+    await SqliteChamadoRepository(DatabaseService.instance).popularSeVazio();
+  } catch (e, s) {
+    debugPrint('Falha ao inicializar o banco de dados: $e\n$s');
+  }
 
   // ProviderScope é a raiz da injeção de dependência do Riverpod.
   runApp(const ProviderScope(child: SosCidadeApp()));

@@ -1,122 +1,122 @@
+import 'dart:math';
+
 import '../../models/chamado.dart';
 
-/// Massa de dados de exemplo usada para popular o banco na primeira execução
+/// Massa de dados fictícios usada para popular o banco na primeira execução
 /// e para abastecer o repositório em memória durante o desenvolvimento/testes.
 ///
-/// Centralizar a semente em um único lugar evita divergência entre as fontes
-/// de dados (SQLite x memória) e facilita a vida de quem desenvolve a UI antes
-/// de a persistência estar 100% pronta.
+/// Os chamados são gerados **aleatoriamente** (categoria, prioridade, status,
+/// bairro, responsável e data), porém com uma semente fixa por padrão para que
+/// a massa seja reproduzível entre execuções. Os títulos são únicos para
+/// respeitar a regra de negócio "não permitir título repetido".
 class DadosMock {
   DadosMock._();
 
-  static final DateTime _agora = DateTime.now();
+  static const List<String> _bairros = [
+    'Centro',
+    'Jardim Primavera',
+    'Vila Nova',
+    'Industrial',
+    'Bela Vista',
+    'Parque das Águas',
+    'São José',
+    'Santa Luzia',
+    'Boa Vista',
+    'Alto da Serra',
+  ];
 
-  static List<Chamado> gerar() => [
-        Chamado(
-          id: '0001',
-          titulo: 'Buraco enorme na Avenida Brasil',
-          descricao:
-              'Buraco profundo próximo ao nº 1200, já causou danos em veículos.',
-          categoria: Categoria.buraco,
-          prioridade: Prioridade.critica,
-          status: StatusChamado.aberto,
-          bairro: 'Centro',
-          dataCriacao: _agora.subtract(const Duration(hours: 3)),
+  static const List<String> _responsaveis = [
+    'Secretaria de Obras',
+    'Equipe de Iluminação',
+    'CET Municipal',
+    'Defesa Civil',
+    'Companhia de Saneamento',
+    'Zeladoria Urbana',
+  ];
+
+  /// Frases de descrição por categoria, para gerar textos plausíveis.
+  static const Map<Categoria, List<String>> _descricoes = {
+    Categoria.buraco: [
+      'Buraco profundo na pista, já causou danos em veículos.',
+      'Asfalto cedeu após as últimas chuvas, risco para motociclistas.',
+    ],
+    Categoria.iluminacao: [
+      'Postes apagados há vários dias, rua perigosa à noite.',
+      'Lâmpada queimada deixando o trecho totalmente escuro.',
+    ],
+    Categoria.vazamento: [
+      'Água jorrando da tubulação, risco de erosão na via.',
+      'Vazamento constante alagando a calçada e desperdiçando água.',
+    ],
+    Categoria.acidente: [
+      'Ponto com histórico de colisões, sinalização insuficiente.',
+      'Veículo colidiu em obstáculo na via sem sinalização.',
+    ],
+    Categoria.semaforo: [
+      'Semáforo apagado em cruzamento movimentado.',
+      'Semáforo piscando em amarelo há dias, gerando confusão.',
+    ],
+    Categoria.lixo: [
+      'Lixo acumulado não recolhido, atraindo insetos e roedores.',
+      'Descarte irregular de entulho na esquina.',
+    ],
+    Categoria.arvore: [
+      'Árvore de grande porte caiu após temporal e bloqueia a rua.',
+      'Galhos comprometidos ameaçam cair sobre a fiação.',
+    ],
+    Categoria.enchente: [
+      'Rua alaga a cada chuva forte, bueiros entupidos.',
+      'Acúmulo de água impede a passagem de pedestres.',
+    ],
+  };
+
+  /// Gera uma lista de [quantidade] chamados aleatórios.
+  ///
+  /// [seed] fixa a aleatoriedade (reprodutível). Passe `null` para variar a
+  /// cada chamada.
+  static List<Chamado> gerar({int quantidade = 14, int? seed = 42}) {
+    final rnd = Random(seed);
+    final categorias = Categoria.values;
+    final prioridades = Prioridade.values;
+    final status = StatusChamado.values;
+
+    return List.generate(quantidade, (i) {
+      final categoria = categorias[rnd.nextInt(categorias.length)];
+      final prioridade = prioridades[rnd.nextInt(prioridades.length)];
+      final st = status[rnd.nextInt(status.length)];
+      final bairro = _bairros[rnd.nextInt(_bairros.length)];
+      final descricoes = _descricoes[categoria]!;
+      final descricao = descricoes[rnd.nextInt(descricoes.length)];
+
+      // Data nas últimas ~30 dias (com hora/minuto aleatórios).
+      final dataCriacao = DateTime.now().subtract(
+        Duration(
+          days: rnd.nextInt(30),
+          hours: rnd.nextInt(24),
+          minutes: rnd.nextInt(60),
         ),
-        Chamado(
-          id: '0002',
-          titulo: 'Rua sem iluminação no Jardim Primavera',
-          descricao:
-              'Três postes apagados há mais de uma semana, rua perigosa à noite.',
-          categoria: Categoria.iluminacao,
-          prioridade: Prioridade.alta,
-          status: StatusChamado.emAndamento,
-          bairro: 'Jardim Primavera',
-          responsavel: 'Equipe de Iluminação',
-          dataCriacao: _agora.subtract(const Duration(days: 1, hours: 5)),
-        ),
-        Chamado(
-          id: '0003',
-          titulo: 'Vazamento de água na calçada',
-          descricao: 'Água jorrando da tubulação, risco de erosão na via.',
-          categoria: Categoria.vazamento,
-          prioridade: Prioridade.alta,
-          status: StatusChamado.aberto,
-          bairro: 'Vila Nova',
-          dataCriacao: _agora.subtract(const Duration(hours: 9)),
-        ),
-        Chamado(
-          id: '0004',
-          titulo: 'Semáforo apagado em cruzamento movimentado',
-          descricao: 'Semáforo totalmente apagado, risco alto de acidentes.',
-          categoria: Categoria.semaforo,
-          prioridade: Prioridade.critica,
-          status: StatusChamado.emAndamento,
-          bairro: 'Industrial',
-          responsavel: 'CET Municipal',
-          dataCriacao: _agora.subtract(const Duration(hours: 18)),
-        ),
-        Chamado(
-          id: '0005',
-          titulo: 'Acúmulo de lixo próximo à escola',
-          descricao: 'Lixo não recolhido há dias, atraindo insetos.',
-          categoria: Categoria.lixo,
-          prioridade: Prioridade.media,
-          status: StatusChamado.emAndamento,
-          bairro: 'Bela Vista',
-          dataCriacao: _agora.subtract(const Duration(days: 2)),
-        ),
-        Chamado(
-          id: '0006',
-          titulo: 'Árvore caída bloqueando a via',
-          descricao: 'Árvore de grande porte caiu após temporal e bloqueia a rua.',
-          categoria: Categoria.arvore,
-          prioridade: Prioridade.critica,
-          status: StatusChamado.aberto,
-          bairro: 'Parque das Águas',
-          dataCriacao: _agora.subtract(const Duration(hours: 6)),
-        ),
-        Chamado(
-          id: '0007',
-          titulo: 'Alagamento recorrente na Rua das Flores',
-          descricao: 'Rua alaga a cada chuva forte, bueiros entupidos.',
-          categoria: Categoria.enchente,
-          prioridade: Prioridade.alta,
-          status: StatusChamado.aberto,
-          bairro: 'Centro',
-          dataCriacao: _agora.subtract(const Duration(days: 1, hours: 2)),
-        ),
-        Chamado(
-          id: '0008',
-          titulo: 'Lâmpada queimada na praça central',
-          descricao: 'Iluminação parcial da praça, prejudica uso noturno.',
-          categoria: Categoria.iluminacao,
-          prioridade: Prioridade.baixa,
-          status: StatusChamado.concluido,
-          bairro: 'Centro',
-          responsavel: 'Equipe de Iluminação',
-          dataCriacao: _agora.subtract(const Duration(days: 7)),
-        ),
-        Chamado(
-          id: '0009',
-          titulo: 'Buraco recorrente após chuva',
-          descricao: 'Asfalto mal recomposto reabre buracos sempre que chove.',
-          categoria: Categoria.buraco,
-          prioridade: Prioridade.media,
-          status: StatusChamado.concluido,
-          bairro: 'Parque das Águas',
-          responsavel: 'Secretaria de Obras',
-          dataCriacao: _agora.subtract(const Duration(days: 9)),
-        ),
-        Chamado(
-          id: '0010',
-          titulo: 'Coleta de lixo não passou',
-          descricao: 'Caminhão da coleta não passou na data prevista.',
-          categoria: Categoria.lixo,
-          prioridade: Prioridade.baixa,
-          status: StatusChamado.concluido,
-          bairro: 'Jardim Primavera',
-          dataCriacao: _agora.subtract(const Duration(days: 4)),
-        ),
-      ];
+      );
+
+      // Responsável apenas para chamados que já saíram de "Aberto".
+      final responsavel = st == StatusChamado.aberto
+          ? null
+          : _responsaveis[rnd.nextInt(_responsaveis.length)];
+
+      // Título único: rótulo da categoria + bairro + nº de protocolo.
+      final numero = (i + 1).toString().padLeft(4, '0');
+      final titulo = '${categoria.label} no $bairro (#$numero)';
+
+      return Chamado(
+        id: numero,
+        titulo: titulo,
+        descricao: descricao,
+        categoria: categoria,
+        prioridade: prioridade,
+        status: st,
+        bairro: bairro,
+        responsavel: responsavel,
+        dataCriacao: dataCriacao,
+      );
+    });
+  }
 }

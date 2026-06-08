@@ -32,6 +32,11 @@ class DashboardPage extends ConsumerWidget {
       body: SafeArea(
         child: state.carregando
             ? const Center(child: CircularProgressIndicator())
+            : state.erro != null
+            ? _ErroEstado(
+                mensagem: state.erro!,
+                onTentarNovamente: controller.carregar,
+              )
             : RefreshIndicator(
                 onRefresh: controller.carregar,
                 child: Center(
@@ -118,6 +123,47 @@ class DashboardPage extends ConsumerWidget {
 
   void _abrirDetalhes(BuildContext context, Chamado chamado) {
     Navigator.pushNamed(context, AppRoutes.detalhes, arguments: chamado);
+  }
+}
+
+/// Estado exibido quando o carregamento dos chamados falha (ex.: erro de banco).
+class _ErroEstado extends StatelessWidget {
+  final String mensagem;
+  final Future<void> Function() onTentarNovamente;
+
+  const _ErroEstado({required this.mensagem, required this.onTentarNovamente});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_off_rounded, size: 56, color: AppColors.danger),
+            const SizedBox(height: 16),
+            Text(
+              'Não foi possível carregar os chamados',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              mensagem,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            ),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: onTentarNovamente,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Tentar novamente'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
