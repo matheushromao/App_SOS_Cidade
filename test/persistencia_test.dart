@@ -16,9 +16,9 @@ void main() {
   });
 
   setUp(() async {
-    // Banco limpo a cada teste.
-    await databaseFactory.deleteDatabase(DatabaseService.dbName);
+    // Banco limpo a cada teste (fecha a conexão antes de apagar o arquivo).
     await DatabaseService.instance.fechar();
+    await databaseFactory.deleteDatabase(DatabaseService.dbName);
   });
 
   test('semear popula o banco e listar retorna os dados', () async {

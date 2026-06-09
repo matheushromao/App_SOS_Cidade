@@ -22,7 +22,9 @@ da prefeitura priorizar e resolver chamados da população.
   prioridade.
 - **Dark mode** (alternável no cabeçalho).
 - **Alerta** automático quando há mais de 5 chamados críticos.
-- **Persistência em SQLite** — os dados permanecem após fechar o app.
+- **Persistência em SQLite** — no mobile (Android/iOS) os dados permanecem após
+  fechar o app. Na web há um *fallback* automático em memória caso o backend
+  SQLite do navegador não esteja disponível (ver seção Persistência).
 
 ### Regras de negócio
 - Título não pode se repetir.
@@ -39,7 +41,7 @@ da prefeitura priorizar e resolver chamados da população.
 |---|---|
 | UI | Flutter · Material Design 3 |
 | Estado / DI | Riverpod (`flutter_riverpod`) |
-| Persistência | SQLite (`sqflite` + `sqflite_common_ffi` / `_web`) |
+| Persistência | SQLite (`sqflite` no mobile, `sqflite_common_ffi_web` na web) |
 | Datas (pt-BR) | `intl` |
 
 ---
@@ -77,39 +79,50 @@ Mais detalhes em [`ARQUITETURA.md`](ARQUITETURA.md) e
 flutter pub get
 ```
 
-### Mobile / Desktop
+### Mobile (recomendado — persistência SQLite completa)
 ```bash
-flutter run            # Android, iOS, Windows, macOS ou Linux
+flutter run            # Android ou iOS
 ```
 
-### Web (passo extra obrigatório, só uma vez)
-O backend SQLite na web precisa do worker e do `sqlite3.wasm` copiados para
-`web/`:
-
+### Web
 ```bash
-dart run sqflite_common_ffi_web:setup
 flutter run -d chrome
 ```
 
-> ⚠️ Sem esse setup o banco não abre na web. O app continua iniciando (não fica
-> em branco) e exibe um estado de erro com **"Tentar novamente"**.
+O app abre normalmente na web e exibe os dados (não fica em branco). O backend
+SQLite do navegador (`sqflite_common_ffi_web`) usa um *web worker* que depende
+de isolamento cross-origin; quando ele não está disponível, o app cai
+automaticamente para um repositório **em memória** — totalmente funcional na
+sessão, mas sem persistir após recarregar. Para a persistência real, use o
+**mobile**.
 
 ---
 
 ## ✅ Testes
 
 ```bash
-flutter test       # testes de model, service e UI
+flutter test       # testes de model, service e UI (repositório em memória)
 flutter analyze    # análise estática
 ```
 
-Os testes injetam o repositório **em memória** (sem SQLite), garantindo
-execução rápida e isolada.
+> **Nota (Windows + Flutter 3.41.9):** o pacote `sqlite3` está fixado na linha
+> **2.x** (`pubspec.yaml`) de propósito. A linha 3.x usa o mecanismo
+> experimental de *native assets*, que dispara um bug do Flutter ao copiar
+> `sqlite3.dll` durante o `flutter test` no Windows (`PathExistsException`,
+> errno 183). Fixando em 2.x, tanto o build Web quanto os testes funcionam.
 
 ---
 
 ## 📦 Persistência
 
-Os chamados ficam em `sos_cidade.db`. A base é semeada com dados de exemplo
-apenas na primeira execução (`main()` → `popularSeVazio()`); depois disso os
-dados persistem entre aberturas do app.
+A camada de dados é abstraída por `ChamadoRepository` (ver `repositories/`):
+
+- **Mobile (Android/iOS):** `SqliteChamadoRepository` sobre o plugin nativo
+  `sqflite`. Os chamados ficam em `sos_cidade.db` e **permanecem após fechar o
+  app**.
+- **Web:** tenta o SQLite via `sqflite_common_ffi_web`; se indisponível, usa
+  `InMemoryChamadoRepository` (fallback definido em `main.dart`).
+
+A base é semeada com dados de exemplo apenas na primeira execução
+(`main()` → `popularSeVazio()`). Trocar a fonte de dados é alterar **uma linha**
+em `lib/providers/chamado_provider.dart`.

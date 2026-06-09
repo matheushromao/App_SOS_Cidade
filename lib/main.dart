@@ -16,22 +16,35 @@ Future<void> main() async {
   // Formatação de datas em pt_BR.
   await initializeDateFormatting('pt_BR', null);
 
-  // Prepara o backend SQLite correto para a plataforma atual e abre o banco.
-  // Semeia a base com dados de exemplo apenas na primeira execução; depois
-  // disso os chamados persistem entre aberturas do app (requisito de SQLite).
+  // Prepara o backend SQLite correto para a plataforma atual, abre o banco e
+  // o semeia com dados de exemplo apenas na primeira execução. A partir daí os
+  // chamados persistem entre aberturas do app (requisito de SQLite).
   //
-  // É feito em try/catch para que uma eventual falha de inicialização do banco
-  // (ex.: Web sem `dart run sqflite_common_ffi_web:setup`) NÃO impeça o app de
-  // abrir — a tela trata o estado de erro e oferece "Tentar novamente".
+  // Se a inicialização do SQLite falhar (ex.: Web sem
+  // `dart run sqflite_common_ffi_web:setup`), o app NÃO trava nem fica em
+  // branco: cai automaticamente para um repositório em memória, garantindo que
+  // a interface sempre carregue e funcione (sem persistência, nesse caso).
+  late final ChamadoRepository repositorio;
   try {
     DatabaseService.configurarFactory();
-    await SqliteChamadoRepository(DatabaseService.instance).popularSeVazio();
+    final sqlite = SqliteChamadoRepository(DatabaseService.instance);
+    await sqlite.popularSeVazio();
+    repositorio = sqlite;
   } catch (e, s) {
-    debugPrint('Falha ao inicializar o banco de dados: $e\n$s');
+    debugPrint('SQLite indisponível — usando repositório em memória.\n$e\n$s');
+    repositorio = InMemoryChamadoRepository();
   }
 
-  // ProviderScope é a raiz da injeção de dependência do Riverpod.
-  runApp(const ProviderScope(child: SosCidadeApp()));
+  // ProviderScope é a raiz da injeção de dependência do Riverpod. O repositório
+  // resolvido acima é injetado por override.
+  runApp(
+    ProviderScope(
+      overrides: [
+        chamadoRepositoryProvider.overrideWithValue(repositorio),
+      ],
+      child: const SosCidadeApp(),
+    ),
+  );
 }
 
 /// Widget raiz da aplicação SOS Cidade.

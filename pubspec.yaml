@@ -45,19 +45,26 @@ dependencies:
   flutter_riverpod: ^2.6.1
 
   # --- Persistência (SQLite) ---
-  # sqflite                -> Android / iOS
-  # sqflite_common         -> núcleo Dart puro (web-safe)
-  # sqflite_common_ffi     -> Desktop (Windows/Linux/macOS) e testes na VM Dart
+  # sqflite                -> Android / iOS (plugin nativo)
+  # sqflite_common         -> núcleo Dart puro (tipos web-safe)
   # sqflite_common_ffi_web -> Web (requer `dart run sqflite_common_ffi_web:setup`)
   sqflite: ^2.4.1
   sqflite_common: ^2.5.4
-  sqflite_common_ffi: ^2.3.4
   sqflite_common_ffi_web: ^0.4.5
+  # Fixa o sqlite3 na linha 2.x (empacotamento legado). A 3.x usa o mecanismo
+  # experimental de "native assets", que dispara um bug do Flutter 3.41.9 no
+  # Windows ao copiar `sqlite3.dll` durante o `flutter test` (errno 183).
+  # Em 2.x: build Web e `flutter test` funcionam; no mobile a persistência usa
+  # o plugin nativo `sqflite` (independe desta versão).
+  sqlite3: ">=2.4.0 <3.0.0"
   path: ^1.9.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+  # Backend SQLite via FFI para rodar os testes de persistência na VM Dart.
+  sqflite_common_ffi: ^2.3.5
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
